@@ -107,8 +107,3 @@ Mismo patrón para `/jugadores`.
 | GET | `/api/estadisticas` | Líderes (`stat`: ppg, rpg, apg, spg, fgPct; `limit`) |
 | GET | `/api/partidos` | Partidos (`status`, `date`, `order`) |
 | GET | `/api/partidos/:id` | Ver un partido |
-
-- La URL identifica el **recurso**, no la acción.
-- Se usan verbos HTTP para la acción: `GET` obtener, `POST` crear, `PUT` reemplazar, `PATCH` actualizar, `DELETE` borrar.
-- JSON como formato de intercambio de datos.
-- Estados: `1xx` informativos, `2xx` OK, `3xx` redirección, `4xx` error del cliente, `5xx` error del servidor.
