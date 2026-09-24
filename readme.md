@@ -108,16 +108,6 @@ Mismo patrón para `/jugadores`.
 | GET | `/api/partidos` | Partidos (`status`, `date`, `order`) |
 | GET | `/api/partidos/:id` | Ver un partido |
 
-## Códigos de estado
-
-- `200` OK
-- `201` Creado
-- `202` Aceptado (PUT/PATCH/DELETE)
-- `404` No encontrado
-- `500` Error del servidor → `{ "message": "..." }`
-
-## Notas HTTP (de clase)
-
 - La URL identifica el **recurso**, no la acción.
 - Se usan verbos HTTP para la acción: `GET` obtener, `POST` crear, `PUT` reemplazar, `PATCH` actualizar, `DELETE` borrar.
 - JSON como formato de intercambio de datos.
