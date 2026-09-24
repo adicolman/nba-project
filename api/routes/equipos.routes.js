@@ -10,7 +10,7 @@ router.get("/api/equipos/:id/jugadores", equipoController.getJugadoresByEquipo)
 router.get("/api/equipos", equipoController.getEquipos)
 router.post("/api/equipos", equipoController.saveEquipo)
 router.get("/api/equipos/:id", equipoController.getEquipoById)
-router.put("/api/equipos/:id", equipoController.replaceEquipo) //reemplazar
+router.put("/api/equipos/:id", equipoController.replaceEquipo)
 router.patch("/api/equipos/:id", equipoController.updateEquipo)
 router.delete("/api/equipos/:id", equipoController.deleteEquipo)
 

@@ -8,7 +8,7 @@ router.get("/api/jugadores/equipo/:equipoId", jugadorController.getJugadoresByEq
 router.get("/api/jugadores", jugadorController.getJugadores)
 router.post("/api/jugadores", jugadorController.saveJugador)
 router.get("/api/jugadores/:id", jugadorController.getJugadorById)
-router.put("/api/jugadores/:id", jugadorController.replaceJugador) //reemplazar
+router.put("/api/jugadores/:id", jugadorController.replaceJugador)
 router.patch("/api/jugadores/:id", jugadorController.updateJugador)
 router.delete("/api/jugadores/:id", jugadorController.deleteJugador)
 

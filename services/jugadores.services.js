@@ -4,8 +4,7 @@ import { posiciones } from "../data/divisiones.js"
 
 const db = getDB()  // Conexión centralizada en config/db.js
 
-// Solo se guardan los campos que el sistema necesita
-// parcial = true se usa para PATCH (actualización parcial)
+// Solo se guardan los campos permitidos; parcial = true omite los obligatorios (PATCH)
 function jugadorValido(jugador, parcial = false) {
     if (!jugador || typeof jugador !== "object") throw new Error("El cuerpo de la petición no es válido")
 
@@ -45,22 +44,17 @@ function jugadorValido(jugador, parcial = false) {
 export async function getJugadores(filtros = {}) {
     const filter = { eliminado: { $ne: true } }
 
-    // Paginado
     const page = parseInt(filtros.page) || 1
     const limit = parseInt(filtros.limit) || 10
     const skip = (page - 1) * limit
 
-    // Ordenamiento: 1 asc / -1 desc
     const sortBy = filtros.sort_by || "name"
     const sortOrder = filtros.sort_order === "asc" ? 1 : -1
     const orderOptions = { [sortBy]: sortOrder }
 
-    // Filtros (la API permite filtrar por varios campos)
     if (filtros?.equipo_id) filter.equipo_id = { $eq: filtros.equipo_id }
     if (filtros?.position) filter.position = { $eq: filtros.position }
-    // Filtro por Nombre
     if (filtros?.name) filter.$text = { $search: filtros.name }
-    //https://www.mongodb.com/es/docs/manual/reference/operator/query/ne/
 
     const jugadores = await db.collection("jugadores")
         .find(filter)
@@ -104,7 +98,7 @@ export async function updateJugador(id, jugador) {
 export async function deleteJugador(id) {
     const jugador = await getJugadorById(id)
     await db.collection("jugadores").updateOne(
-        { _id: new ObjectId(id) }, { $set: { eliminado: true } }//https://www.mongodb.com/es/docs/manual/reference/operator/update/set/
+        { _id: new ObjectId(id) }, { $set: { eliminado: true } }
     )
     return jugador
 }

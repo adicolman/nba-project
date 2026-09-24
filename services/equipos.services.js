@@ -4,8 +4,7 @@ import { divisiones } from "../data/divisiones.js"
 
 const db = getDB()  // Conexión centralizada en config/db.js
 
-// Solo se guardan los campos que el sistema necesita
-// parcial = true se usa para PATCH (actualización parcial)
+// Solo se guardan los campos permitidos; parcial = true omite los obligatorios (PATCH)
 function equipoValido(equipo, parcial = false) {
     if (!equipo || typeof equipo !== "object") throw new Error("El cuerpo de la petición no es válido")
 
@@ -50,23 +49,18 @@ function equipoValido(equipo, parcial = false) {
 export async function getEquipos(filtros = {}) {
     const filter = { eliminado: { $ne: true } }
 
-    // Paginado
     const page = parseInt(filtros.page) || 1
     const limit = parseInt(filtros.limit) || 10
     const skip = (page - 1) * limit
 
-    // Ordenamiento: 1 asc / -1 desc
     const sortBy = filtros.sort_by || "name"
     const sortOrder = filtros.sort_order === "asc" ? 1 : -1
     const orderOptions = { [sortBy]: sortOrder }
 
-    // Filtros (la API permite filtrar por varios campos)
     if (filtros?.division) filter.division = { $eq: filtros.division }
     if (filtros?.conference) filter.conference = { $eq: filtros.conference }
     if (filtros?.city) filter.city = { $eq: filtros.city }
-    // Filtro por Nombre
     if (filtros?.name) filter.$text = { $search: filtros.name }
-    //https://www.mongodb.com/es/docs/manual/reference/operator/query/ne/
 
     const equipos = await db.collection("equipos")
         .find(filter)
@@ -110,7 +104,7 @@ export async function updateEquipo(id, equipo) {
 export async function deleteEquipo(id) {
     const equipo = await getEquipoById(id)
     await db.collection("equipos").updateOne(
-        { _id: new ObjectId(id) }, { $set: { eliminado: true } }//https://www.mongodb.com/es/docs/manual/reference/operator/update/set/
+        { _id: new ObjectId(id) }, { $set: { eliminado: true } }
     )
     return equipo
 }
@@ -129,7 +123,6 @@ export async function getEquiposByConference(conference) {
     return equipos
 }
 
-// Posiciones de la liga: balance por conferencia, ordenado por porcentaje
 export async function getStandings(conference = null) {
     const filter = { eliminado: { $ne: true } }
     if (conference) filter.conference = conference
@@ -155,7 +148,6 @@ export async function getStandings(conference = null) {
     return conBalance
 }
 
-// Líderes de una estadística (ppg, rpg, apg, spg, fgPct)
 export async function getLeaders(stat = "ppg", limit = 10) {
     const jugadores = await db.collection("jugadores")
         .find({ eliminado: { $ne: true }, [`stats.${stat}`]: { $exists: true } })

@@ -82,7 +82,6 @@ export async function getEquiposByConference(req, res) {
     }
 }
 
-// Todos los jugadores que pertenecen a un equipo en particular
 export async function getJugadoresByEquipo(req, res) {
     try {
         const id = req.params.id
