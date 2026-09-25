@@ -20,6 +20,11 @@ app.use(equipoApiRoutes)
 app.use(jugadorApiRoutes)
 app.use(seccionesApiRoutes)
 
-await connectDB()
+try {
+    await connectDB()
+} catch (error) {
+    console.error("No se pudo conectar a MongoDB:", error.message)
+    process.exit(1)
+}
 
 app.listen(3333, () => console.log("NBA API funcionando en http://localhost:3333"))

@@ -4,21 +4,33 @@ import { divisiones } from "../data/divisiones.js"
 
 const db = getDB()  // Conexión centralizada en config/db.js
 
+function toObjectId(id) {
+    if (id === undefined || id === null || !ObjectId.isValid(String(id))) return null
+    return new ObjectId(String(id))
+}
+
+// Error de validación -> 4xx en la API (errores del cliente)
+function invalido(message) {
+    const error = new Error(message)
+    error.status = 400
+    return error
+}
+
 // Solo se guardan los campos permitidos; parcial = true omite los obligatorios (PATCH)
 function equipoValido(equipo, parcial = false) {
-    if (!equipo || typeof equipo !== "object") throw new Error("El cuerpo de la petición no es válido")
+    if (!equipo || typeof equipo !== "object") throw invalido("El cuerpo de la petición no es válido")
 
     if (!parcial) {
-        if (!equipo.name) throw new Error("Falta el campo obligatorio: name")
-        if (!equipo.city) throw new Error("Falta el campo obligatorio: city")
-        if (!equipo.logo) throw new Error("Falta el campo obligatorio: logo")
-        if (!equipo.description) throw new Error("Falta el campo obligatorio: description")
-        if (!equipo.arena) throw new Error("Falta el campo obligatorio: arena")
-        if (!equipo.conference) throw new Error("Falta el campo obligatorio: conference")
-        if (!equipo.division) throw new Error("Falta el campo obligatorio: division")
-        if (!equipo.website) throw new Error("Falta el campo obligatorio: website")
-        if (equipo.founded === undefined || isNaN(equipo.founded)) throw new Error("Falta el campo obligatorio: founded")
-        if (equipo.championships === undefined || isNaN(equipo.championships)) throw new Error("Falta el campo obligatorio: championships")
+        if (!equipo.name) throw invalido("Falta el campo obligatorio: name")
+        if (!equipo.city) throw invalido("Falta el campo obligatorio: city")
+        if (!equipo.logo) throw invalido("Falta el campo obligatorio: logo")
+        if (!equipo.description) throw invalido("Falta el campo obligatorio: description")
+        if (!equipo.arena) throw invalido("Falta el campo obligatorio: arena")
+        if (!equipo.conference) throw invalido("Falta el campo obligatorio: conference")
+        if (!equipo.division) throw invalido("Falta el campo obligatorio: division")
+        if (!equipo.website) throw invalido("Falta el campo obligatorio: website")
+        if (equipo.founded === undefined || isNaN(equipo.founded)) throw invalido("Falta el campo obligatorio: founded")
+        if (equipo.championships === undefined || isNaN(equipo.championships)) throw invalido("Falta el campo obligatorio: championships")
     }
 
     const documento = {}
@@ -37,10 +49,10 @@ function equipoValido(equipo, parcial = false) {
     if (typeof equipo.color === "string") documento.color = equipo.color
 
     if (typeof documento.conference === "string" && !["Eastern", "Western"].includes(documento.conference)) {
-        throw new Error("La conferencia debe ser Eastern o Western")
+        throw invalido("La conferencia debe ser Eastern o Western")
     }
     if (typeof documento.division === "string" && !divisiones.some(d => d.name === documento.division)) {
-        throw new Error("La división no es válida")
+        throw invalido("La división no es válida")
     }
 
     return documento
@@ -48,10 +60,6 @@ function equipoValido(equipo, parcial = false) {
 
 export async function getEquipos(filtros = {}) {
     const filter = { eliminado: { $ne: true } }
-
-    const page = parseInt(filtros.page) || 1
-    const limit = parseInt(filtros.limit) || 10
-    const skip = (page - 1) * limit
 
     const sortBy = filtros.sort_by || "name"
     const sortOrder = filtros.sort_order === "asc" ? 1 : -1
@@ -65,19 +73,15 @@ export async function getEquipos(filtros = {}) {
     const equipos = await db.collection("equipos")
         .find(filter)
         .sort(orderOptions)
-        .skip(skip)
-        .limit(limit)
         .toArray()
-
-    const documentos = await db.collection("equipos").countDocuments(filter)
-    equipos.push({ documentos: documentos, totalPages: Math.ceil(documentos / limit), currentPage: page })
 
     return equipos
 }
 
 export async function getEquipoById(id) {
-    if (!id) return null
-    const equipo = await db.collection("equipos").findOne({ _id: new ObjectId(String(id)) })
+    const _id = toObjectId(id)
+    if (!_id) return null
+    const equipo = await db.collection("equipos").findOne({ _id, eliminado: { $ne: true } })
     return equipo
 }
 
@@ -87,26 +91,42 @@ export async function saveEquipo(equipo) {
     return { ...documento, _id: resultado.insertedId }
 }
 
-export async function replaceEquipo(id, equipo) {
+export async function editEquipo(id, equipo) {
+    const _id = toObjectId(id)
+    if (!_id) return null
+
     const documento = equipoValido(equipo)
-    await db.collection("equipos").replaceOne({ _id: new ObjectId(id) }, documento)
-    return { ...documento, _id: new ObjectId(String(id)) }
+    const resultado = await db.collection("equipos").replaceOne(
+        { _id, eliminado: { $ne: true } }, documento
+    )
+    if (!resultado.matchedCount) return null
+
+    return { ...documento, _id }
 }
 
 export async function updateEquipo(id, equipo) {
+    const _id = toObjectId(id)
+    if (!_id) return null
+
     const documento = equipoValido(equipo, true)
-    await db.collection("equipos").updateOne(
-        { _id: new ObjectId(id) }, { $set: documento }
+    const resultado = await db.collection("equipos").updateOne(
+        { _id, eliminado: { $ne: true } }, { $set: documento }
     )
+    if (!resultado.matchedCount) return null
+
     return documento
 }
 
-export async function deleteEquipo(id) {
-    const equipo = await getEquipoById(id)
-    await db.collection("equipos").updateOne(
-        { _id: new ObjectId(id) }, { $set: { eliminado: true } }
+export async function deleteEquipoLogico(id) {
+    const _id = toObjectId(id)
+    if (!_id) return null
+
+    // Borrado lógico atómico: el documento deja de formar parte de las consultas activas.
+    return await db.collection("equipos").findOneAndUpdate(
+        { _id, eliminado: { $ne: true } },
+        { $set: { eliminado: true } },
+        { returnDocument: "after" }
     )
-    return equipo
 }
 
 export async function getEquiposByDivision(division) {

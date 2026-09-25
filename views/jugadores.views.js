@@ -1,11 +1,8 @@
-import { createPage, pageHead, jugadorForm, emptyState, sectionHead, playerRow, statsBar, tabs, dataRow } from "../page/utils.js"
+import { createPage, pageHead, jugadorForm, emptyState, sectionHead, playerRow, statsBar, tabs, dataRow, esc } from "../page/utils.js"
 import { posiciones } from "../data/divisiones.js"
 
 export function jugadorList(jugadores, filtros = {}, equipos = []) {
-    const meta = jugadores.find(j => j.documentos !== undefined)
-    const docs = jugadores.filter(j => j.documentos === undefined)
-    const equiposDocs = equipos.filter(e => e.documentos === undefined)
-    const equiposMap = new Map(equiposDocs.map(e => [String(e._id), e]))
+    const equiposMap = new Map(equipos.map(e => [String(e._id), e]))
 
     const posTabs = [
         { href: "/jugadores", value: "", label: "Todos" },
@@ -15,7 +12,7 @@ export function jugadorList(jugadores, filtros = {}, equipos = []) {
 
     const searchForm = `
     <form class="searchbar input-group" method="get" action="/jugadores" style="max-width:640px;">
-        <input class="form-control" type="search" name="name" placeholder="Buscar jugador…" value="${filtros.name ?? ""}">
+        <input class="form-control" type="search" name="name" placeholder="Buscar jugador…" value="${esc(filtros.name)}">
         <button class="btn" type="submit">Buscar</button>
     </form>`
 
@@ -25,27 +22,9 @@ export function jugadorList(jugadores, filtros = {}, equipos = []) {
             <div class="container">
                 ${searchForm}
                 ${tabs(posTabs, active)}
-                ${docs.length ? docs.map(j => playerRow(j, equiposMap.get(String(j.equipo_id)))).join("") : emptyState("Sin resultados", "No hay jugadores con esos filtros.")}
-                ${meta && meta.totalPages > 1 ? paginationHtml(meta, "/jugadores", filtros) : ""}
+                ${jugadores.length ? jugadores.map(j => playerRow(j, equiposMap.get(String(j.equipo_id)))).join("") : emptyState("Sin resultados", "No hay jugadores con esos filtros.")}
             </div>
         </section>`, "/jugadores")
-}
-
-function paginationHtml(meta, base, filtros = {}) {
-    const params = new URLSearchParams()
-    for (const [k, v] of Object.entries(filtros)) {
-        if (v && k !== "page") params.set(k, v)
-    }
-    const link = p => {
-        params.set("page", p)
-        return `${base}?${params.toString()}`
-    }
-    return `
-    <div class="row-actions" style="margin-top:28px; justify-content:center;">
-        ${meta.currentPage > 1 ? `<a class="btn btn-outline btn-sm" href="${link(meta.currentPage - 1)}">Anterior</a>` : ""}
-        <span class="meta">Página ${meta.currentPage} de ${meta.totalPages} · ${meta.documentos} resultados</span>
-        ${meta.currentPage < meta.totalPages ? `<a class="btn btn-outline btn-sm" href="${link(meta.currentPage + 1)}">Siguiente</a>` : ""}
-    </div>`
 }
 
 export function jugadorDetail(jugador, equipo) {
@@ -103,20 +82,18 @@ export function jugadorDetail(jugador, equipo) {
 }
 
 export function newJugadorForm(equipos) {
-    const equiposDocs = equipos.filter(e => e.documentos === undefined)
     return createPage("Nuevo jugador", `
         ${pageHead("Nuevo jugador", "Cargá la ficha del jugador y asignalo a su equipo.")}
         <section class="section">
-            <div class="container">${jugadorForm(null, equiposDocs, "/jugadores/nuevo")}</div>
+            <div class="container">${jugadorForm(null, equipos, "/jugadores/nuevo")}</div>
         </section>`, "/jugadores")
 }
 
 export function editJugadorForm(jugador, equipos) {
-    const equiposDocs = equipos.filter(e => e.documentos === undefined)
     return createPage(`Editar ${jugador.name}`, `
         ${pageHead(`Editar ${jugador.name}`, "Modificá la ficha del jugador.")}
         <section class="section">
-            <div class="container">${jugadorForm(jugador, equiposDocs, `/jugadores/editar/${jugador._id}`)}</div>
+            <div class="container">${jugadorForm(jugador, equipos, `/jugadores/editar/${jugador._id}`)}</div>
         </section>`, "/jugadores")
 }
 
@@ -139,13 +116,4 @@ export function deleteJugadorForm(jugador) {
                 </div>
             </div>
         </section>`, "/jugadores")
-}
-
-export function page404() {
-    return createPage("404", `
-        <section class="section">
-            <div class="container">
-                ${emptyState("Página no encontrada", "El recurso no existe o fue eliminado.", `<a class="btn" href="/">Volver al inicio</a>`)}
-            </div>
-        </section>`)
 }

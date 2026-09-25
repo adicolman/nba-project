@@ -147,7 +147,7 @@ p { margin-top: 1em; margin-bottom: 1em; }
     gap: 7px;
     white-space: nowrap;
 }
-.brand .dot { width: 9px; height: 9px; background: var(--orange); display: inline-block; }
+
 .brand em { font-style: normal; color: var(--gold); }
 .mainnav {
     display: flex;
@@ -165,7 +165,6 @@ p { margin-top: 1em; margin-bottom: 1em; }
     text-decoration: none;
     color: rgba(255,255,255,.72);
     padding: 22px 12px 20px;
-    border-bottom: 3px solid transparent;
     white-space: nowrap;
     flex-shrink: 0;
     transition: color .15s, border-color .15s;
@@ -463,7 +462,6 @@ p { margin-top: 1em; margin-bottom: 1em; }
 .leader-card.lc-light .lc-name { color: var(--ink); }
 .leader-card.lc-light .lc-team { color: var(--gray); }
 
-.fixtures { border-top: 2px solid var(--ink); }
 .on-dark .fixtures { border-top-color: rgba(255,255,255,.35); }
 .fixture {
     display: grid;
@@ -753,8 +751,7 @@ p { margin-top: 1em; margin-bottom: 1em; }
 
 .empty-state {
     text-align: center;
-    padding: 72px 24px;
-    border-top: 2px solid var(--ink);
+    padding: 72px 24px; .
     border-bottom: 2px solid var(--ink);
 }
 .empty-state h2 { font-family: 'Archivo Black', sans-serif; font-size: 34px; text-transform: uppercase; margin: 0 0 12px; }

@@ -1,11 +1,26 @@
 import * as equipoService from "../services/equipos.services.js"
 import * as partidoService from "../services/partidos.services.js"
 import * as seccionesView from "../views/secciones.views.js"
+import { sendError, sendNotFound } from "../page/utils.js"
 import { leyendas } from "../data/leyendas.js"
 
 async function equiposMap() {
-    const equipos = await equipoService.getEquipos({ limit: 100 })
+    const equipos = await equipoService.getEquipos()
     return new Map(equipos.filter(e => e._id).map(e => [String(e._id), e]))
+}
+
+export async function home(req, res) {
+    try {
+        const [equipos, standings, rpg, apg] = await Promise.all([
+            equipoService.getEquipos(),
+            equipoService.getStandings(),
+            equipoService.getLeaders("rpg", 5),
+            equipoService.getLeaders("apg", 5)
+        ])
+        res.send(seccionesView.homePage({ equipos, standings, rpg, apg, leyendas }))
+    } catch (error) {
+        sendError(res, error)
+    }
 }
 
 export async function posiciones(req, res) {
@@ -14,7 +29,7 @@ export async function posiciones(req, res) {
         const standings = await equipoService.getStandings(conference || null)
         res.send(seccionesView.posicionesPage(standings, conference))
     } catch (error) {
-        res.send(seccionesView.leyenda404())
+        sendError(res, error)
     }
 }
 
@@ -27,7 +42,7 @@ export async function partidos(req, res) {
         const map = await equiposMap()
         res.send(seccionesView.partidosPage(partidosDocs, map, status))
     } catch (error) {
-        res.send(seccionesView.leyenda404())
+        sendError(res, error)
     }
 }
 
@@ -39,7 +54,7 @@ export async function estadisticas(req, res) {
         const map = await equiposMap()
         res.send(seccionesView.estadisticasPage(lideres, valido, map))
     } catch (error) {
-        res.send(seccionesView.leyenda404())
+        sendError(res, error)
     }
 }
 
@@ -47,7 +62,7 @@ export function leyendasList(req, res) {
     try {
         res.send(seccionesView.leyendasPage())
     } catch (error) {
-        res.send(seccionesView.leyenda404())
+        sendError(res, error)
     }
 }
 
@@ -55,9 +70,9 @@ export function leyendaDetail(req, res) {
     try {
         const nombre = req.params?.nombre
         const leyenda = leyendas.find(l => l.name === nombre)
-        if (!leyenda) return res.send(seccionesView.leyenda404())
+        if (!leyenda) return sendNotFound(res)
         res.send(seccionesView.leyendaDetail(leyenda))
     } catch (error) {
-        res.send(seccionesView.leyenda404())
+        sendError(res, error)
     }
 }

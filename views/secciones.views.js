@@ -1,5 +1,73 @@
-import { createPage, pageHead, emptyState, sectionHead, standingsTable, leaderCards, fixturesList, legendCard, tabs } from "../page/utils.js"
+import { createPage, pageHead, emptyState, sectionHead, standingsTable, teamRow, leaderCards, fixturesList, legendCard, tabs } from "../page/utils.js"
 import { leyendas } from "../data/leyendas.js"
+
+export function homePage({ equipos, standings, rpg, apg, leyendas }) {
+    const equiposMap = new Map((equipos || []).map(e => [String(e._id), e]))
+    const top6 = standings.slice(0, 6)
+    const topLeyendas = (leyendas || []).slice(0, 4)
+    return createPage("Inicio", `
+        <section class="hero">
+            <div class="container hero-grid">
+                <div class="row g-5 align-items-end">
+                    <div class="col-md-7 hero-copy">
+                        <span class="kicker gold">Archivo de la liga · Temporada 2025-26</span>
+                        <h1>La NBA,<br><span class="accent">franquicia por franquicia</span></h1>
+                        <p class="dek">Doce equipos, veinticuatro jugadores, posiciones, estadísticas y leyendas. Un archivo editorial para recorrer la liga equipo por equipo.</p>
+                        <div class="hero-actions">
+                            <a class="btn" href="/equipos">Ver equipos</a>
+                            <a class="btn btn-outline-light" href="/posiciones">Tabla de posiciones</a>
+                        </div>
+                    </div>
+                    <div class="col-md-5 hero-photo">
+                        <span class="jersey">30</span>
+                        <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/201939.png" alt="Stephen Curry">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-dark">
+            <div class="container">
+                ${sectionHead("Tabla de posiciones", { kicker: "Temporada en curso", link: "/posiciones", linkLabel: "Ver completa", dark: true })}
+                ${standingsTable(top6, { dark: true, showDivision: true })}
+            </div>
+        </section>
+
+        <section class="section section-paper">
+            <div class="container">
+                ${sectionHead("Equipos de la liga", { kicker: "12 franquicias", link: "/equipos", linkLabel: "Directorio completo" })}
+                ${(equipos || []).slice(0, 6).map(teamRow).join("")}
+            </div>
+        </section>
+
+        <section class="section section-dark">
+            <div class="container">
+                <div class="row g-5">
+                    <div class="col-md-6">
+                        ${sectionHead("Máximos reboteadores", { kicker: "Pizarrón", link: "/estadisticas?stat=rpg", linkLabel: "Ver más", dark: true })}
+                        <div class="row g-0">
+                            ${leaderCards(rpg, "rpg", "RPG", equiposMap).replaceAll("class=\"leader-card\"", "class=\"leader-card col-md-4\"")}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        ${sectionHead("Máximos asistentes", { kicker: "Pizarrón", link: "/estadisticas?stat=apg", linkLabel: "Ver más", dark: true })}
+                        <div class="row g-0">
+                            ${leaderCards(apg, "apg", "APG", equiposMap).replaceAll("class=\"leader-card\"", "class=\"leader-card col-md-4\"")}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                ${sectionHead("NBA Legends", { kicker: "Sala de la fama viva", link: "/leyendas", linkLabel: "Todas las leyendas" })}
+                <div class="row g-4">
+                    ${topLeyendas.map(l => `<div class="col-12 col-sm-6 col-lg-3">${legendCard(l)}</div>`).join("")}
+                </div>
+            </div>
+        </section>`, "/")
+}
 
 export function posicionesPage(standings, conference = "") {
     const confTabs = [
@@ -104,11 +172,3 @@ export function leyendaDetail(leyenda) {
         </section>`, "/leyendas")
 }
 
-export function leyenda404() {
-    return createPage("404", `
-        <section class="section">
-            <div class="container">
-                ${emptyState("Leyenda no encontrada", "No existe esa leyenda en el archivo.", `<a class="btn" href="/leyendas">Ver leyendas</a>`)}
-            </div>
-        </section>`, "/leyendas")
-}

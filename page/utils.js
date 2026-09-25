@@ -28,7 +28,7 @@ function footer() {
     <footer class="site-footer">
         <div class="container">
             <span class="f-brand">NBA Archivo</span>
-            <span>Parcial 1 · Aplicaciones Híbridas · Datos de colección <a href="/api/equipos">API pública</a></span>
+            <span>Parcial 1 · Aplicaciones Híbridas</span>
         </div>
     </footer>`
 }
@@ -44,22 +44,22 @@ export function esc(value) {
 
 export function createPage(title, content, active = "") {
     return `<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title} · NBA Archivo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <style>${STYLES}</style>
-</head>
-<body>
-    ${navBar(active)}
-    <main>
-${content}
-    </main>
-    ${footer()}
-</body>
-</html>`
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${esc(title)} · NBA Archivo</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <style>${STYLES}</style>
+    </head>
+    <body>
+        ${navBar(active)}
+        <main>
+    ${content}
+        </main>
+        ${footer()}
+    </body>
+    </html>`
 }
 
 export function pageHead(title, dek = "", actions = "") {
@@ -99,6 +99,21 @@ export function errorPage(status, message) {
         </section>`)
 }
 
+export function page404() {
+    return errorPage(404, "Página no encontrada")
+}
+
+export function sendNotFound(res) {
+    return res.status(404).send(page404())
+}
+
+// 400 si el service validó el cuerpo; 500 para errores de servidor
+export function sendError(res, error) {
+    const status = error?.status || 500
+    const message = status === 400 ? error.message : "No pudimos procesar la solicitud"
+    return res.status(status).send(errorPage(status, message))
+}
+
 export function sectionHead(title, opts = {}) {
     const { kicker = "", link = "", linkLabel = "", dark = false } = opts
     return `
@@ -122,10 +137,10 @@ export function tabs(items, active = "", opts = {}) {
 export function teamRow(equipo) {
     return `
     <a class="team-row" href="/equipos/${equipo._id}">
-        <div class="logo-box"><img src="${equipo.logo}" alt="${equipo.name}"></div>
+        <div class="logo-box"><img src="${esc(equipo.logo)}" alt="${esc(equipo.name)}"></div>
         <div>
-            <h3 class="tr-name">${equipo.name}</h3>
-            <div class="tr-meta">${equipo.city} · ${equipo.conference} · ${equipo.division}</div>
+            <h3 class="tr-name">${esc(equipo.name)}</h3>
+            <div class="tr-meta">${esc(equipo.city)} · ${esc(equipo.conference)} · ${esc(equipo.division)}</div>
         </div>
         <div class="tr-right">
             <div class="stat-num">${equipo.championships ?? 0}<small>Anillos</small></div>
@@ -138,11 +153,11 @@ export function playerRow(jugador, equipo = null) {
     const s = jugador.stats ?? {}
     return `
     <a class="player-row" href="/jugadores/${jugador._id}">
-        <div class="pr-photo"><img src="${jugador.foto}" alt="${jugador.name}"></div>
+        <div class="pr-photo"><img src="${esc(jugador.foto)}" alt="${esc(jugador.name)}"></div>
         <div>
-            <h3 class="pr-name">${jugador.name}</h3>
-            <div class="pr-meta">${jugador.position} · #${jugador.number}${equipo ? ` · ${equipo.name}` : ""}</div>
-            <div class="pr-desc">${jugador.description}</div>
+            <h3 class="pr-name">${esc(jugador.name)}</h3>
+            <div class="pr-meta">${esc(jugador.position)} · #${jugador.number}${equipo ? ` · ${esc(equipo.name)}` : ""}</div>
+            <div class="pr-desc">${esc(jugador.description)}</div>
         </div>
         <div class="pr-stats">
             <div class="s"><b>${s.ppg ?? "—"}</b><span>PPP</span></div>
@@ -162,10 +177,10 @@ export function standingsTable(equipos, opts = {}) {
             <td class="rank">${e.rank ?? "—"}</td>
             <td class="tleft">
                 <div class="team-cell">
-                    <img src="${e.logo}" alt="">
+                    <img src="${esc(e.logo)}" alt="">
                     <div>
-                        <a href="/equipos/${e._id}">${e.name}</a>
-                        <span class="sub">${e.city}</span>
+                        <a href="/equipos/${e._id}">${esc(e.name)}</a>
+                        <span class="sub">${esc(e.city)}</span>
                     </div>
                 </div>
             </td>
@@ -202,9 +217,9 @@ export function leaderCards(jugadores, stat, label, equiposMap = new Map()) {
         <a class="leader-card" href="/jugadores/${j._id}">
             <div class="lc-rank">#${i + 1}</div>
             <div class="lc-value">${value}</div>
-            <div class="lc-label">${label}</div>
-            <div class="lc-name">${j.name}</div>
-            <div class="lc-team">${equipo ? equipo.name : ""}</div>
+            <div class="lc-label">${esc(label)}</div>
+            <div class="lc-name">${esc(j.name)}</div>
+            <div class="lc-team">${equipo ? esc(equipo.name) : ""}</div>
         </a>`
     }).join("")
 }
@@ -233,16 +248,16 @@ export function fixturesList(partidos, equiposMap = new Map()) {
             </div>
             <div class="fx-teams">
                 <div class="tm${homeWin ? ` winner` : ""}">
-                    ${home ? `<img src="${home.logo}" alt="">` : ""}${p.home}
+                    ${home ? `<img src="${esc(home.logo)}" alt="">` : ""}${esc(p.home)}
                 </div>
                 <span class="vs">VS</span>
                 <div class="tm${awayWin ? ` winner` : ""}">
-                    ${away ? `<img src="${away.logo}" alt="">` : ""}${p.away}
+                    ${away ? `<img src="${esc(away.logo)}" alt="">` : ""}${esc(p.away)}
                 </div>
             </div>
             ${isFinal
                 ? `<div class="fx-score"><span class="${homeWin ? "" : "loser"}">${p.homeScore}</span><span class="sep">–</span><span class="${awayWin ? "" : "loser"}">${p.awayScore}</span></div>`
-                : `<div class="fx-arena">${p.arena ?? ""}</div>`}
+                : `<div class="fx-arena">${esc(p.arena)}</div>`}
         </div>`
     }).join("")
     return `<div class="fixtures">${items}</div>`
@@ -252,13 +267,13 @@ export function legendCard(leyenda) {
     return `
     <a class="legend-card" href="/leyendas/${encodeURIComponent(leyenda.name)}">
         <div class="lg-photo">
-            <img src="${leyenda.foto}" alt="${leyenda.name}">
-            <span class="lg-years">${leyenda.years}</span>
+            <img src="${esc(leyenda.foto)}" alt="${esc(leyenda.name)}">
+            <span class="lg-years">${esc(leyenda.years)}</span>
         </div>
-        <h3>${leyenda.name}</h3>
-        <div class="lg-team">${leyenda.equipo}</div>
-        <div class="lg-titulos">${leyenda.titulos}</div>
-        <div class="lg-desc">${leyenda.description}</div>
+        <h3>${esc(leyenda.name)}</h3>
+        <div class="lg-team">${esc(leyenda.equipo)}</div>
+        <div class="lg-titulos">${esc(leyenda.titulos)}</div>
+        <div class="lg-desc">${esc(leyenda.description)}</div>
     </a>`
 }
 
@@ -298,12 +313,12 @@ export function equipoForm(equipo = null, action = null) {
     <div class="form-card">
         <form method="POST" action="${action || "/equipos/nuevo"}">
             <div class="row g-4">
-                <div class="col-md-6 field"><label>Nombre</label><input class="form-control" name="name" required value="${e.name ?? ""}"></div>
-                <div class="col-md-6 field"><label>Ciudad</label><input class="form-control" name="city" required value="${e.city ?? ""}"></div>
-                <div class="col-12 field"><label>Logo (URL)</label><input class="form-control" name="logo" required value="${e.logo ?? ""}" placeholder="https://..."></div>
-                <div class="col-12 field"><label>Descripción</label><textarea class="form-control" name="description" required>${e.description ?? ""}</textarea></div>
-                <div class="col-md-6 field"><label>Arena</label><input class="form-control" name="arena" required value="${e.arena ?? ""}"></div>
-                <div class="col-md-6 field"><label>Sitio web</label><input class="form-control" name="website" required value="${e.website ?? ""}"></div>
+                <div class="col-md-6 field"><label>Nombre</label><input class="form-control" name="name" required value="${esc(e.name)}"></div>
+                <div class="col-md-6 field"><label>Ciudad</label><input class="form-control" name="city" required value="${esc(e.city)}"></div>
+                <div class="col-12 field"><label>Logo (URL)</label><input class="form-control" name="logo" required value="${esc(e.logo)}" placeholder="https://..."></div>
+                <div class="col-12 field"><label>Descripción</label><textarea class="form-control" name="description" required>${esc(e.description)}</textarea></div>
+                <div class="col-md-6 field"><label>Arena</label><input class="form-control" name="arena" required value="${esc(e.arena)}"></div>
+                <div class="col-md-6 field"><label>Sitio web</label><input class="form-control" name="website" required value="${esc(e.website)}"></div>
                 <div class="col-md-6 field">
                     <label>Conferencia</label>
                     <select class="form-select" name="conference" required>
@@ -321,7 +336,7 @@ export function equipoForm(equipo = null, action = null) {
                 <div class="col-md-6 field"><label>Campeonatos</label><input class="form-control" type="number" name="championships" required value="${e.championships ?? 0}"></div>
                 <div class="col-md-6 field"><label>Victorias</label><input class="form-control" type="number" name="wins" value="${e.wins ?? 0}"></div>
                 <div class="col-md-6 field"><label>Derrotas</label><input class="form-control" type="number" name="losses" value="${e.losses ?? 0}"></div>
-                <div class="col-md-6 field"><label>Color (hex)</label><input class="form-control" name="color" value="${e.color ?? ""}" placeholder="#007A33"></div>
+                <div class="col-md-6 field"><label>Color (hex)</label><input class="form-control" name="color" value="${esc(e.color)}" placeholder="#007A33"></div>
             </div>
             <div class="form-actions">
                 <button class="btn" type="submit">${isEdit ? "Guardar cambios" : "Crear equipo"}</button>
@@ -339,9 +354,9 @@ export function jugadorForm(jugador = null, equipos = [], action = null) {
     <div class="form-card">
         <form method="POST" action="${action || "/jugadores/nuevo"}">
             <div class="row g-4">
-                <div class="col-12 field"><label>Nombre</label><input class="form-control" name="name" required value="${j.name ?? ""}"></div>
-                <div class="col-12 field"><label>Foto (URL)</label><input class="form-control" name="foto" required value="${j.foto ?? ""}" placeholder="https://cdn.nba.com/headshots/..."></div>
-                <div class="col-12 field"><label>Descripción</label><textarea class="form-control" name="description" required>${j.description ?? ""}</textarea></div>
+                <div class="col-12 field"><label>Nombre</label><input class="form-control" name="name" required value="${esc(j.name)}"></div>
+                <div class="col-12 field"><label>Foto (URL)</label><input class="form-control" name="foto" required value="${esc(j.foto)}" placeholder="https://cdn.nba.com/headshots/..."></div>
+                <div class="col-12 field"><label>Descripción</label><textarea class="form-control" name="description" required>${esc(j.description)}</textarea></div>
                 <div class="col-md-6 field"><label>Número</label><input class="form-control" type="number" name="number" required value="${j.number ?? ""}"></div>
                 <div class="col-md-6 field">
                     <label>Posición</label>
@@ -352,10 +367,10 @@ export function jugadorForm(jugador = null, equipos = [], action = null) {
                 <div class="col-12 field">
                     <label>Equipo</label>
                     <select class="form-select" name="equipo_id" required>
-                        ${equipos.map(e => `<option value="${e._id}"${String(j.equipo_id) === String(e._id) ? " selected" : ""}>${e.name}</option>`).join("")}
+                        ${equipos.map(e => `<option value="${e._id}"${String(j.equipo_id) === String(e._id) ? " selected" : ""}>${esc(e.name)}</option>`).join("")}
                     </select>
                 </div>
-                <div class="col-md-6 field"><label>Nacionalidad</label><input class="form-control" name="nationality" required value="${j.nationality ?? ""}"></div>
+                <div class="col-md-6 field"><label>Nacionalidad</label><input class="form-control" name="nationality" required value="${esc(j.nationality)}"></div>
                 <div class="col-md-6 field"><label>Altura (cm)</label><input class="form-control" type="number" name="height" required value="${j.height ?? ""}"></div>
                 <div class="col-md field"><label>PPP</label><input class="form-control" type="number" step="0.1" name="ppg" value="${stats.ppg ?? ""}"></div>
                 <div class="col-md field"><label>PPR</label><input class="form-control" type="number" step="0.1" name="rpg" value="${stats.rpg ?? ""}"></div>
